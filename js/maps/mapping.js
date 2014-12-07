@@ -4,7 +4,7 @@
 	var marker; // Global for marker code?
 
 	var geocoder = new google.maps.Geocoder();
-	var lat = 43.6631001;
+	var lat = 38.627200;
 	var lng = -90.305300;
 	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
@@ -15,7 +15,6 @@
 
 	$(window).load(function() {
 		initialize();
-		addMarker(latlng);
 		getGeolocation();
 	});
 
@@ -26,7 +25,7 @@
 
 	function initialize() {
 		var mapOptions = {
-			zoom: 14,
+			zoom: 10,
 			scrollwheel: false,
 			center: latlng,
 			draggable: true,
@@ -47,7 +46,9 @@
 	function incident_ajax_callback(data) {
 		if(!data)	{ console.log("Error: no data given in incident_ajax_callback."); }
 
-		return;
+		for(var i = 0 ; i < data.length; i++) {
+			addIncident(data[i]);
+		}
 	}
 
 	function addIncident(incident) {
@@ -138,25 +139,7 @@
 		}
 		latlng = new google.maps.LatLng(lat, lng);
 		map.panTo(latlng); // .setCenter
-		if(marker)
-			marker.setPosition(latlng);
-		else {
-			var image = {
-				url: 'images/gcbc_marker.png',
-				// This marker is 20 pixels wide by 32 pixels tall.
-				size: new google.maps.Size(32, 34),
-				// The origin for this image is 0,0.
-				origin: new google.maps.Point(0,0),
-				// The anchor for this image is the base of the flagpole at 0,32.
-				anchor: new google.maps.Point(16, 39)
-			};
-
-			marker = new google.maps.Marker({
-											map: map,
-											icon: image,
-											position: latlng
-											});
-		}
+		
 	}
 
 

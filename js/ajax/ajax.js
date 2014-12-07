@@ -11,9 +11,6 @@ function displayData(data){
 	$('#lowestRated').find('iframe').attr('src', data[0]['Evidence Piece'][0].field_media_url['und'][0].display_url);
 };
 
-function incident_ajax_callback(data){
-
-};
 
 $(function(){
 	$.ajax({
