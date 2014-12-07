@@ -8,6 +8,7 @@
 		<!-- Javascript stuff -->
 		<script type="text/javascript" src="js/vendor/jquery.min.js"></script>
 		<script type="text/javascript" src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/modals.js"></script>
 
 
 	</head>
