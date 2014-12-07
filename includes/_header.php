@@ -6,6 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="bootstrap-3.1.1-dist/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="css/style.css">
 		<link rel="stylesheet" href="css/sam.css">
+		<link rel="stylesheet" href="css/francine.css">
 
 
 		<!-- Javascript stuff -->
@@ -35,7 +36,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">Good Cop Bad Cop</a>
+					<a class="navbar-brand" href="#">Good Cop <img src="images/gcbc-logo.png" alt="" class="logo"> Bad Cop</a>
 				</div>
 
 				<!-- Collect the nav links, forms, and other content for toggling -->
