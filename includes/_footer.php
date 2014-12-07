@@ -1,4 +1,4 @@
-	<div id="footer" class="container-fluid clearfix">
+	<div id="footer" class="container-fluid clearfix center">
 		<div class="footer row clearfix">
 			<div id="copyright">Copyright <?php echo date("Y"); ?></div>
 

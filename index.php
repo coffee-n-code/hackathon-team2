@@ -2,7 +2,7 @@
 <html>
 	<head prefix="">
 
-		<title>Police Accountability</title>
+		<title>Good Cop Bad Cop | Home</title>
 
 		<?php include("includes/_header.php"); ?>
 
