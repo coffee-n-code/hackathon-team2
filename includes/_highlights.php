@@ -1,6 +1,6 @@
 <section class="row highlights">
 <!-- Most recent -->
-	<div class="col-md-4 center highlight">
+	<div class="col-lg-4 col-md-6 col-xs-12 center highlight">
 		<h3>Most Recent</h3>
 		<div class="video">
 		<!-- Thumbnail Image -->
@@ -13,7 +13,7 @@
 		<a href="incident.php" class="view btn btn-info btn-sm">View</a>
 	</div>
 <!-- Highest rated -->
-	<div class="col-md-4 center highlight">
+	<div class="col-lg-4 col-md-6 col-xs-12 center highlight">
 		<h3>Highest Rated</h3>
 		<div class="video">
 			<!-- Thumbnail Image -->
@@ -26,7 +26,7 @@
 		<a href="incident.php" class="view btn btn-info btn-sm">View</a>
 	</div>
 <!-- Lowest rated -->
-	<div class="col-md-4 center highlight">
+	<div class="col-lg-4 col-md-6 col-xs-12 center highlight">
 		<h3>Lowest Rated</h3>
 		<div class="video">
 			<!-- Thumbnail Image -->
