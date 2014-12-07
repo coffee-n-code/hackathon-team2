@@ -4,7 +4,7 @@
 		<h3>Most Recent</h3>
 		<div class="video">
 		<!-- Thumbnail Image -->
-			<a href="" class="video-thumbnail" target="_blank"><iframe width="250" height="150" src="//www.youtube.com/embed/IeHBc3W4Raw" frameborder="0" allowfullscreen></iframe></a>
+			<a href="" class="video-thumbnail" target="_blank"></a>
 		</div>
 		<!-- Incident details -->
 		<h4 class="incident text-primary">Incident</h4>
@@ -26,7 +26,7 @@
 		<h3>Lowest Rated</h3>
 		<div class="video">
 			<!-- Thumbnail Image -->
-			<a href="" class="video-thumbnail" target="_blank"><iframe width="250" height="150" src="//www.youtube.com/embed/IeHBc3W4Raw" frameborder="0" allowfullscreen></iframe></a>
+			<a href="" class="video-thumbnail" target="_blank"></a>
 		</div>
 		<!-- Incident details -->
 		<h4 class="incident text-primary">Incident</h4>
