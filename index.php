@@ -12,5 +12,7 @@
 			</div>
 			<?php include("includes/_highlights.php"); ?>
 		</div>
+
+		<?php include("includes/_footer.php"); ?>
 	</body>	
 </html>

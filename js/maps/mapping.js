@@ -9,10 +9,20 @@
 	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
 
+
+
+// --------------------- The window load function...
+
 	$(window).load(function() {
 		initialize();
 		addMarker(latlng);
+		getGeolocation();
 	});
+
+
+
+
+// ------------------------------- Now for the bulk of the mapping functions
 
 	function initialize() {
 		var mapOptions = {
@@ -75,7 +85,6 @@
 			//console.log("scrollMapHTMLOnce...");
 			scrollMapHTML(position);
 			geolocated = true;
-			buttonClickHandler();
 		}
 	}
 
@@ -111,12 +120,12 @@
 	function addMarker(latlng, url, image_src) {
 		if(!latlng	|| latlng	== "") { return false; }
 		if(!url		|| url		== "") { url = "incident.php"; }
-		if(!image	|| image	== "") { image_src	= 'images/gcbc_marker.png'; }
+		if(!image	|| image	== "") { image_src	= 'images/bad-marker.png'; }
 
 		var image = {
 			url: image_src,
 			// This marker is 20 pixels wide by 32 pixels tall.
-			size: new google.maps.Size(32, 34),
+			size: new google.maps.Size(35,45),
 			// The origin for this image is 0,0.
 			origin: new google.maps.Point(0,0),
 			// The anchor for this image is the base of the flagpole at 0,32.
@@ -128,20 +137,10 @@
 			icon: image,
 			position: latlng
 		});
+
 		google.maps.event.addListener(marker, 'click', function() {
 			window.location = url;
 		});
-	}
-
-
-	function handleError(error) {
-		// Update a div element with error.message.
-		showInContentWindowWarning("Could not determine location from web browser. Please click on map or enter an address above.");
-		console.log("Location service failed. Check browser settings.");
-	}
-
-	function buttonClickHandler() {
-		// Cancel the updates when the user clicks a button.
 	}
 
 /* ************************************************** Geolocating the User *********************************/
