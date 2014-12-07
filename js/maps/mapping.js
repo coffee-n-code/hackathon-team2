@@ -6,6 +6,7 @@
 	var geocoder = new google.maps.Geocoder();
 	var lat = 43.6631001;
 	var lng = -79.4105665;
+	var map;
 
 	$(window).load(function() { initialize(); });
 
@@ -27,63 +28,7 @@
 			mapTypeId: 'roadmap',
 			streetViewControl: false
 		}
-		var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-	}
-
-	function viewer_init(retries) {
-		if(!retries || retries == "") { retries = 0; }
-		if(typeof $lat == "undefined" && retries <= 6) { setTimeout(function() { viewer_init(retries + 1); },1000); return; }
-
-		gi = new GeoInstance('map-canvas',pasteltonesStyle,$lat,$lng);
-
-		// Center on the appropriate neighbourhood, if one is specified (if on a neighbourhood page)
-		if(typeof $store_id != "undefined" && typeof $store_name != 'undefined' && $store_id > 0) {
-			addCity($store_id,true);
-			try {
-				setNeighbourhood($store_name,false,comms_by_id[$store_id]['parent_id'],"",$store_id);
-				center_on_id($store_id);
-			} catch(err) { void(0); }
-		} else { // Should be the case for the splash page, at the start
-			addCity(59);
-			addCity(251);
-		}
-
-		// If on the biz profile page, show the appropriate business on the map, give it a marker
-		if(typeof $product_id != "undefined" && $product_id > 0 &&
-		typeof $product_name != "undefined" && $product_name != '' &&
-		$product_lat != 0 && $product_lng != 0) {
-			addPoint('product_id=' + $product_id + ',name=' + $product_name ,$product_lat,$product_lng);
-		}
-	}
-
-	function addCity(id,center) {
-		if(!center || center == "") { center = false; }
-		var url = '/canada/ontario/toronto/parkbench/index.php?route=integration/geo/getMapKml&name=Parkbench Neighbourhoods&select_store_ids='+id+'&outputid=1';
-		var gl = gi.addLayer('Parkbench Neighbourhoods '+id,GeoLayerType.POLYGON,url,center);
-
-		gl.registerCallbackFunc('kmlCallback',geoFunc_hide_disabled_hoods);
-		gl.registerCallbackFunc('clickCallback',polygon_clicked_wrapper);
-	}
-	// More recent additions by Rodney, as of 14.10.24
-	function addPoint(name,lat,lng) {
-		var gl = gi.addLayerPoint(name,lat,lng);
-
-		gl.registerCallbackFunc('clickCallback',item_clicked_wrapper);
-	}
-	function addTile(id) {
-		var url = "http://parkbench.com/hnp/data/1882/Layer_NewLayer/"
-		var gl = gi.addLayer('Tile '+id,GeoLayerType.TILE,url);
-	}
-	function setTile(name,state) {
-		gi.setVisible(name,state);
-	}
-	function addItems(id,type,cats) {
-		// cats can be comma-sep list
-		var url = '/canada/ontario/toronto/parkbench/index.php?route=integration/geo/getStoreItemsKml&store_id='+id+'&type='+type+'&category_ids='+cats;
-		var gl = gi.addLayer('Store '+id+'/'+type,GeoLayerType.VERTEX,url);
-
-		gl.registerCallbackFunc('kmlCallback',geoFunc_hide_disabled_hoods);
-		gl.registerCallbackFunc('clickCallback',item_clicked_wrapper);
+		map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
 	}
 
 	// Sam's function for splash
@@ -102,7 +47,7 @@
 		scrollMap(starting_lat,starting_lng);
 
 		// Now, just in case, close the infobox.
-		gi.infobox.close();
+		infobox.close();
 	}
 
 	// Based on Rodney's suggestion to help with polygon-based centroids, converted to function (rather than prototype).
@@ -187,10 +132,10 @@ function item_clicked_wrapper(layer,e,placemark) {
 
 					// Center the map on the clicked item
 					scrollMap(lat,lng);
-					gi.infobox.show();
+					infobox.show();
 					$("#infobox .btn_small").hide();
 					if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-						gi.infobox.open(gi.map,marker);
+						infobox.open(map,marker);
 					}
 					$("#neighbourhoodName").html(decode_polydata_name(polydata['name']));
 					setTimeout(function() { $("#neighbourhoodName").html(decode_polydata_name(polydata['name'])); }, 50);
@@ -210,7 +155,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 
 				// Set the infobox appropriately
 				if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-					gi.infobox.open(gi.map,marker);
+					infobox.open(map,marker);
 				}
 
 				var name 	= decode_polydata_name(polydata['name']);
@@ -303,164 +248,6 @@ function item_clicked_wrapper(layer,e,placemark) {
 		});
 	}
 
-	// Huge improvement on setNeighbourhood, allowing one to set hood by ID.
-	function set_hood_by_id(id) {
-		if(!id || id == "") { console.log("Error in set_hood_by_id, no id!"); return false; }
-
-		var hood_obj	= comms_by_id[id];
-		if(!hood_obj || typeof hood_obj == "undefined") { console.log("No neighbourhood with id " + id + " in set_hood_by_id"); return false; }
-		var name		= hood_obj['name'];
-		var iscity		= hood_obj['type'] == 2;
-		var city_id		= hood_obj['parent_id'];
-
-		_setNeighbourhood(name);
-
-		selectedNeighbourhood = name;
-		$("#neighbourhoodName").html(name);
-		setMenus(name, iscity, city_id, "", id);
-	}
-
-	// Helper function for setNeighbourhood. Only this part needs to recurse, in case for some reason the infobox fails to select.
-	function _setNeighbourhood(name) {
-		// This part sets up the gi.infobox.
-		var sidediv = document.getElementById('neighbourhoodName');
-		if (sidediv) {
-			retrySet = 0;
-			if(selectedNeighbourhood) {sidediv.innerHTML = name;}
-			setTimeout(function() { if(name) {sidediv.innerHTML = name;} }, 50); // Fix the occasional lag: sometimes it doesn't update properly.
-		} else {
-			++retrySet;
-			if (retrySet < 6) {
-				window.setTimeout(function() {_setNeighbourhood(name);},100);
-			}
-		}
-
-		// Close the infobox in case of "neighbourhood" placeholder.
-		if(!selectedNeighbourhood || selectedNeighbourhood == "" || selectedNeighbourhood == "Neighbourhood" || selectedNeighbourhood == "false") {
-			gi.infobox.close();
-		}
-		if($("#neighbourhoodName").html() == "") {
-			gi.infobox.close();
-		}
-	}
-
-	function setNeighbourhood(name, iscity, city_id, polydata, hood_id) {
-		if (!name		|| name		== "")	{ name = false;	return;	} // That's a problem.
-		if (!city_id	|| city_id	== "")	{ city_id = false;	}
-		if (!iscity		|| iscity	== "")	{ iscity = false;	}
-		if (!polydata	|| polydata == "")	{ polydata = false;	}
-		if (!hood_id	|| hood_id	== "")	{ hood_id = false;	}
-
-		if(hood_id) { return set_hood_by_id(hood_id); }
-
-		if(name && city_id) {
-			var neighbourhood_object = find_neighbourhood_by_name(hood_name,parentname);
-		}
-
-		selectedNeighbourhood = name;
-		_setNeighbourhood(name);
-
-		$("#neighbourhoodName").html(name);
-		setMenus(name, iscity, city_id, polydata);
-	}
-
-	// A very simple placeholder UI for loading a new neighbourhood
-	function setNeighbourhood_placeholder(phrase) {
-		if (!phrase	|| phrase == "")  { phrase = "Loading...";   }
-
-		// This part sets up the gi.infobox.
-		var sidediv = document.getElementById('neighbourhoodName');
-		if (sidediv) {
-			retrySet = 0;
-			sidediv.innerHTML = phrase;
-		}
-
-		// And this part disables the buttons, temporarily
-		unset_buttons(true);
-		$(".find-button-link").removeAttr("href");
-		$(".infobox-btn-link").removeAttr("href");
-		$(".city").val(null);
-		$(".neighbourhood").val(null);
-	}
-
-	// Helper function to perform an ajax call, if necessary, to find a city by a point on the map; then handle the call!
-	function _checkNeighbourhood_and_city(lat,lon,selected_n) {
-		if(!lat || !lon || !selected_n) { console.log("You're misusing _checkNeighbourhood_and_city!"); return; }
-		try {
-			$.ajax(getcity_api_url + "lat=" + lat + "&lng=" + lon).done(function(resp) {
-				// Many things might go wrong with the ajax call...error catchers!
-				if(typeof resp == "undefined")		  { console.log("_checkNeighbourhood_and_city ajax fail"); return; }
-				if(typeof resp.error != "undefined")	{ console.log("Ajax error! in _checkNeighbourhood_and_city"); return; }
-				if(typeof resp.match[0] == "undefined") { console.log("No match! in _checkNeighbourhood_and_city"); return; }
-
-				var parentid = resp.match[0].id;
-				setNeighbourhood(selected_n,false,parentid);
-			});
-		}
-		catch(err) {
-			console.log("Error thrown in _checkNeighbourhood_and_city, lat: " + lat + "; lon: " + lon);
-			console.log(err);
-		}
-	}
-
-	function checkNeighbourhood(loc, lat, lon, show_infobox, geocity_as_fallback,should_i_scroll,iscity) {
-		if(!loc || !lat || !lon)								{ console.log("No coords in checkNeighbourhood"); return false; }
-
-		if(!show_infobox || show_infobox == "")					{ show_infobox = true;			}
-		if(!geocity_as_fallback || geocity_as_fallback== "")	{ geocity_as_fallback = false;	}
-		if(!should_i_scroll || should_i_scroll == "")			{ should_i_scroll = true;		}
-		if(!iscity || iscity == "")								{ iscity = false;				}
-		if(user_touched_dropdowns == 0)							{ user_touched_dropdowns = 1;	}
-
-		var indexToUse = -1;
-		for(var n = 0; n < gi.layers.length; n++) {
-			var geoXmlDoc = gi.layers[n].geoXmlDoc;
-			if(!geoXmlDoc || typeof geoXmlDoc.gpolygons === "undefined") { break; }
-
-			for (var i = 0; i < geoXmlDoc.gpolygons.length; i++) {
-				try {
-					if (geoXmlDoc.placemarks[i].polygon.getVisible()) {
-						if (google.maps.geometry.poly.containsLocation(loc,geoXmlDoc.gpolygons[i])) {
-
-							var polydata	= decode_poly_query(geoXmlDoc.placemarks[i].name);
-							var selected_n	= decode_polydata_name(polydata['name']);
-
-							if(should_i_scroll) {
-								scrollMap(lat,lon);
-								if(!show_infobox) {	gi.infobox.close(); } else {
-									if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-										gi.infobox.open(gi.map,marker); }
-									}
-							} else {
-								gi.infobox.close();
-							}
-
-							if(typeof default_neighbourhoodChanged == "undefined" || default_neighbourhoodChanged == true) {
-								window.location.hash = encodeURIComponent(selected_n) + "/" + polydata['store_id'];
-							}
-
-							setBaseColour(geoXmlDoc);
-							geoXmlDoc.placemarks[i].polygon.normalStyle = {fillColor: "#AAAAAA", strokeColor: "#FFAAAA", fillOpacity: 0.3, strokeWidth: 5, strokeOpacity: 1};
-							geoXmlDoc.placemarks[i].polygon.setOptions(geoXmlDoc.placemarks[i].polygon.normalStyle);
-							indexToUse = i;
-							break;
-						}
-					}
-				} catch (err) {
-					if(geocity_as_fallback) { geocity(); }
-					console.log("Error thrown in checkNeighbourhood: " + lat + ", " + lon);
-					break;
-				}
-			}
-		}
-
-		if (indexToUse == -1) {
-			noticePrefix = "";
-			showInContentWindowWarning('Your address was found but it is not in a current ParkBench neighbourhood.');
-		}
-		return indexToUse;
-	}
-
 	function setBaseColour(geoXmlDoc) {
 		for(var n = 0; n < gi.layers.length; n++) {
 			var geoXmlDoc = gi.layers[n].geoXmlDoc;
@@ -537,7 +324,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 			return "Error";
 		}
 		latlng = new google.maps.LatLng(lat, lng);
-		gi.map.panTo(latlng); // .setCenter
+		map.panTo(latlng); // .setCenter
 		if(marker)
 			marker.setPosition(latlng);
 		else {
@@ -552,7 +339,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 			};
 
 			marker = new google.maps.Marker({
-											map: gi.map,
+											map: map,
 											icon: image,
 											position: latlng
 											});
@@ -570,16 +357,6 @@ function item_clicked_wrapper(layer,e,placemark) {
 	function buttonClickHandler() {
 		// Cancel the updates when the user clicks a button.
 		navigator.geolocation.clearWatch(watchId);
-	}
-
-	// Set up the form listeners
-	function bind_form_to_map() {
-		// Listeners for <select> items.
-		$(".city").change(			function(e) { cityChange_user(this);		}); // Pass in the DOM object of the city being passed in.
-		$('.neighbourhood').change(	function(e) { neighbourhoodChanged(this);	});
-
-		$(".address .my-location, .address-pin").bind("click tap",function(e){ my_location(); 		});
-		set_address_input(); // when a user inputs an address, this function decides how to handle it.
 	}
 
 /* ************************************************** Geolocating the User *********************************/
@@ -754,7 +531,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 		// Let's use Google Maps API to locate that city!
 		encodeAddress(false,false,(name + ", " + province),false,true,false);
 		$("#neighbourhoodName").html(name);
-		gi.infobox.close();
+		infobox.close();
 		$(".neighbourhood").val(null);
 		return 1;
 	}
@@ -766,9 +543,9 @@ function item_clicked_wrapper(layer,e,placemark) {
 		highlight_centered_polygon();
 		setNeighbourhood(name, false, city_id);
 		if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-			gi.infobox.open(gi.map,marker);
+			infobox.open(map,marker);
 		}
-		if(gi.map.getZoom() < 7) { gi.map.setZoom(14); }
+		if(map.getZoom() < 7) { map.setZoom(14); }
 	}
 
 	// Center the map on a given neighbourhood; pass in neighbourhood by name.
@@ -788,7 +565,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 		current_neighbourhood = name;
 		selectedNeighbourhood = name;
 		if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-			gi.infobox.open(gi.map,marker);
+			infobox.open(map,marker);
 		}
 
 		if(lat != "" && lon != "") {
@@ -966,7 +743,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 				setTimeout(function() {check_links();}, 50);
 
 				if(!show_infobox) {
-					gi.infobox.close();
+					infobox.close();
 				} // Else it will be opened above by setNeighbourhood
 
 				if(scroll_and_exit) {
@@ -979,7 +756,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 					if(page_jump) { _encodeAddress_pagejump(); }
 				}
 				if(!found_neighbourhood) {
-					gi.infobox.close();
+					infobox.close();
 					var message = "<h3>You'll need to include a city name in your search or select from the drop-down menu below.</h3><p>If your city isn't in the dropdown menu, don't worry. It will be soon!</p>";
 					if(geolocated_hood_name != "" && geolocated_hood_name != false) {
 						center_on_neighbourhood(geolocated_hood_name);
@@ -1268,7 +1045,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 
 	// Highlight the polygon that currently occupies the map center.
 	function highlight_centered_polygon() {
-		var loc = gi.map.center;
+		var loc = map.center;
 		try {
 			if(!gi.layers || !gi.layers[0].geoXmlDoc || !gi.layers[0].geoXmlDoc.gpolygons) { return false; }
 		} catch(err) { return false; }
@@ -1318,7 +1095,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 			if(geolocated_loc != "") { // Means it has been found/set.
 				var found_hood	= getNeighbourhood_from_loc(geolocated_loc);
 				if(found_hood == false) {
-					gi.infobox.close();
+					infobox.close();
 					return false;
 				} else {
 					geolocated_hood_id		= found_hood;
@@ -1396,7 +1173,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 
 		if(selected_n) { $("#neighbourhoodName").html(selected_n);}
 		if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-			gi.infobox.open(gi.map,marker);
+			infobox.open(map,marker);
 		}
 		center_on_id(selected_id);
 
