@@ -8,10 +8,9 @@
 
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-xs-12">
-					<h1>Good Cop Bad Cop</h1>
-					<p>Hackathon team 2: very basic starting site</p>
-
+				<div id="map-canvas-container">
+					<div id="map-canvas">
+					</div>
 				</div>
 			</div>
 			<?php include("includes/_highlights.php"); ?>
