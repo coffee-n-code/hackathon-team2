@@ -7,6 +7,8 @@
 	var lat = 43.6631001;
 	var lng = -79.4105665;
 
+	$(window).load(function() { initialize(); });
+
 	function initialize() {
 		var latlng = new google.maps.LatLng(lat,lng);
 		var mapOptions = {

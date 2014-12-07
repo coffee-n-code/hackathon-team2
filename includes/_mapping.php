@@ -1,5 +1,6 @@
 				<div id="map-canvas-container">
 					<div id="map-canvas">
+						Loading map...
 					</div>
 				</div>
 

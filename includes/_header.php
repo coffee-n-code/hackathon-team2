@@ -5,6 +5,7 @@
 		<!-- Stylesheets -->
 		<link rel="stylesheet" type="text/css" href="bootstrap-3.1.1-dist/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="css/style.css">
+		<link rel="stylesheet" href="css/sam.css">
 
 
 		<!-- Javascript stuff -->
@@ -24,7 +25,7 @@
 		<!-- The header of our site -->
 
 
-		<nav class="navbar navbar-default" role="navigation">
+		<nav id="header-nav" class="navbar navbar-default" role="navigation">
 			<div class="container-fluid">
 				<!-- Brand and toggle get grouped for better mobile display -->
 				<div class="navbar-header">
