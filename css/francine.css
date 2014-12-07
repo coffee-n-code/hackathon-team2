@@ -6,6 +6,23 @@
 	width: 35px;
 }
 
+div.video {
+	position: relative;
+	z-index: 100;
+}
+a.video-thumbnail {
+	position: relative;
+	z-index: 100;
+	display: inline-block;
+	width: 250px;
+	height: 150px;
+}
+
+iframe {
+	position: relative;
+	z-index: -100;
+}
+
 section.highlights {
 	width: 95%;
 	margin: 0 auto;
