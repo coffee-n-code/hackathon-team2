@@ -35,5 +35,27 @@ div.highlight:nth-of-type(2) {
 	color: #31708F;
 }
 
+@media all and (max-width: 1199px) {
+	div.highlight:nth-of-type(2) {
+		border-left: 1px solid #c9c9c9;
+		border-right: 0;
+	}
+	div.highlight:last-of-type {
+		margin-top: 40px;
+	}
+}
 
+@media all and (max-width: 991px) {
+	div.highlight:nth-of-type(2) {
+		border-left: 0;
+		border-top: 1px solid #c9c9c9;
+		border-bottom: 1px solid #c9c9c9;
+	}
+	div.highlight {
+		padding: 40px 0;
+	}
+	div.highlight:last-of-type {
+		margin-top: 0;
+	}
+}
 
