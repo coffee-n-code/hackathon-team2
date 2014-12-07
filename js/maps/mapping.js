@@ -80,6 +80,15 @@
 		});
 
 		google.maps.event.addListener(marker, 'click', function() {
+
+			$('#form-title').val(data[0].node_title);
+			$('#form-thumbnail').val(data[0]['Evidence Piece'][0].field_media_url['und'][0].display_url);
+			$('#form-iframe').val(data[0]['Evidence Piece'][0].field_media_url['und'][0].display_url);
+
+			console.log($('#form-title').val());
+			console.log($('#form-thumbnail').val());
+			console.log($('#form-iframe').val());
+
 			window.location = url;
 		});
 	}
