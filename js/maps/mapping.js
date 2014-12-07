@@ -26,7 +26,7 @@
 
 	function initialize() {
 		var mapOptions = {
-			zoom: 12,
+			zoom: 10,
 			scrollwheel: false,
 			center: latlng,
 			draggable: true,
@@ -53,7 +53,6 @@
 	}
 
 	function addIncident(incident) {
-		console.log(incident);
 		var latlng		= new google.maps.LatLng(incident['location_latitude'], incident['location_longitude']);
 
 		addMarker(latlng);
@@ -141,25 +140,7 @@
 		}
 		latlng = new google.maps.LatLng(lat, lng);
 		map.panTo(latlng); // .setCenter
-		if(marker)
-			marker.setPosition(latlng);
-		else {
-			var image = {
-				url: 'images/gcbc_marker.png',
-				// This marker is 20 pixels wide by 32 pixels tall.
-				size: new google.maps.Size(32, 34),
-				// The origin for this image is 0,0.
-				origin: new google.maps.Point(0,0),
-				// The anchor for this image is the base of the flagpole at 0,32.
-				anchor: new google.maps.Point(16, 39)
-			};
-
-			marker = new google.maps.Marker({
-											map: map,
-											icon: image,
-											position: latlng
-											});
-		}
+		
 	}
 
 
