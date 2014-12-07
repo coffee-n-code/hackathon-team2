@@ -5,3 +5,35 @@
 .logo {
 	width: 35px;
 }
+
+section.highlights {
+	width: 95%;
+	margin: 0 auto;
+	padding-top: 50px;
+}
+
+div.highlight:nth-of-type(2) {
+	border-left: 1px solid #c9c9c9;
+	border-right: 1px solid #c9c9c9;
+}
+
+#footer {
+	color: #000;
+	padding: 50px 70px;
+	margin-top: 50px;
+}
+
+#footer a,
+#footer a:visited {
+	color: #428BCA;
+	-webkit-transition: color 0.3s;
+	transition: color 0.3s;
+}
+
+#footer a:hover,
+#footer a:focus {
+	color: #31708F;
+}
+
+
+
