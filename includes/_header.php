@@ -36,7 +36,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">Good Cop <img src="images/gcbc-logo.png" alt="" class="logo"> Bad Cop</a>
+					<a class="navbar-brand" href="index.php">Good Cop <img src="images/gcbc-logo.png" alt="" class="logo"> Bad Cop</a>
 				</div>
 
 				<!-- Collect the nav links, forms, and other content for toggling -->
