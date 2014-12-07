@@ -4,6 +4,8 @@
 
 		<!-- Stylesheets -->
 		<link rel="stylesheet" type="text/css" href="bootstrap-3.1.1-dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/style.css">
+
 
 		<!-- Javascript stuff -->
 		<script type="text/javascript" src="js/vendor/jquery.min.js"></script>

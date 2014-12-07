@@ -12,3 +12,31 @@ input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer;}b
 *, *:before, *:after {
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
  }
+
+ul.votes,
+ul.related-incidents {
+	padding: 0;
+}
+
+ul.votes li,
+ul.related-incidents li {
+ 	list-style-type: none;
+ 	margin-bottom: 10px;
+ }
+
+ ul.votes li {
+ 	float: left;
+ 	margin-right: 20px;
+ }
+
+ section#video,
+ aside#related {
+ 	padding-top: 50px;
+ 	padding-right: 50px;
+ }
+ 
+ section#video {
+ 	padding-left: 100px;
+ 	
+ }
+
