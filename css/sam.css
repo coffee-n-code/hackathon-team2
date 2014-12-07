@@ -13,6 +13,11 @@
 		border-bottom:	1px solid #00aeef;
 	}
 
+	/* Other */
+	.about {
+		height:380px;
+	}
+
 
 /* Some utility classes */
 	.left {
