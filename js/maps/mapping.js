@@ -23,6 +23,29 @@
 
 // ------------------------------- Now for the bulk of the mapping functions
 
+
+	// Ajax call, only for the mapping page
+	$(function(){
+		$.ajax({
+			url: 'http://goodcopbadcop.co/en/api/v1/incident_service',
+			type: 'GET',
+			dataType: "json",
+			error: function(result,a,b){
+				console.log(":(");
+				console.log(result, a, b);
+			},
+			success: function(result,a,b){
+				console.log("Huzzah!");
+				console.log(result);
+				var data = result;
+				displayData(data);
+				incident_ajax_callback(data);
+			}
+		});
+	});
+
+
+
 	function initialize() {
 		var mapOptions = {
 			zoom: 10,
@@ -47,18 +70,18 @@
 		if(!data)	{ console.log("Error: no data given in incident_ajax_callback."); }
 
 		for(var i = 0 ; i < data.length; i++) {
-			addIncident(data[i]);
+			addIncident(data, i);
 		}
 	}
 
-	function addIncident(incident) {
-		var latlng		= new google.maps.LatLng(incident['location_latitude'], incident['location_longitude']);
+	function addIncident(data, i) {
+		var latlng		= new google.maps.LatLng(data[i]['location_latitude'], data[i]['location_longitude']);
 
-		addMarker(latlng, "", "", incident);
+		addMarker(latlng, "", "", data, i);
 	}
 
 
-	function addMarker(latlng, url, image_src, incident) {
+	function addMarker(latlng, url, image_src, data, i) {
 		if(!latlng	|| latlng	== "") { return false; }
 		if(!url		|| url		== "") { url = "incident.php"; }
 		if(!image	|| image	== "") { image_src	= 'images/bad-marker.png'; }
@@ -81,15 +104,20 @@
 
 		google.maps.event.addListener(marker, 'click', function() {
 
-			$('#form-title').val(incident.node_title);
-			$('#form-thumbnail').val(incident['Evidence Piece'][0].field_media_url['und'][0].display_url);
-			$('#form-iframe').val(incident['Evidence Piece'][0].field_media_url['und'][0].display_url);
+			$('#form-title').val(data[i].node_title);
+			$('#form-thumbnail').val(data[i]['Evidence Piece'][0].field_media_url['und'][0].display_url);
+			$('#form-iframe').val('<iframe width="250" height="150" src="//www.youtube.com/embed/'+constructSrc(data, i)+'" frameborder="0" allowfullscreen></iframe>');
 
+			window.location = url;
+
+			/*
 			console.log($('#form-title').val());
 			console.log($('#form-thumbnail').val());
 			console.log($('#form-iframe').val());
 
-			//window.location = url;
+			*/
+
+			//$("#hiding_form").submit();
 		});
 	}
 
