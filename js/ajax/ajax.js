@@ -3,9 +3,6 @@ function displayData(data){
 	$('#videoTitle').text(data.node_title);
 };
 
-function incident_ajax_callback(data){
-
-};
 
 $(function(){
 	$.ajax({

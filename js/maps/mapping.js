@@ -4,7 +4,7 @@
 	var marker; // Global for marker code?
 
 	var geocoder = new google.maps.Geocoder();
-	var lat = 38.7442;
+	var lat = 38.627200;
 	var lng = -90.305300;
 	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
@@ -15,7 +15,6 @@
 
 	$(window).load(function() {
 		initialize();
-		addMarker(latlng);
 		getGeolocation();
 	});
 
