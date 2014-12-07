@@ -1,0 +1,24 @@
+
+/* Header styles */
+	
+	#header-nav {
+		margin-bottom:0;
+	}
+
+/* Mapping styles */
+	#map-canvas {
+		height:300px;
+		background: #DDD;
+	}
+
+
+/* Some utility classes */
+	.left {
+		text-align: left;
+	}
+	.center {
+		text-align: center;
+	}
+	.right {
+		text-align: right;
+	}
