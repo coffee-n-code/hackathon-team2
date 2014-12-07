@@ -4,7 +4,7 @@
 	var marker; // Global for marker code?
 
 	var geocoder = new google.maps.Geocoder();
-	var lat = 43.6631001;
+	var lat = 38.7442;
 	var lng = -90.305300;
 	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
@@ -26,7 +26,7 @@
 
 	function initialize() {
 		var mapOptions = {
-			zoom: 14,
+			zoom: 12,
 			scrollwheel: false,
 			center: latlng,
 			draggable: true,
@@ -47,10 +47,13 @@
 	function incident_ajax_callback(data) {
 		if(!data)	{ console.log("Error: no data given in incident_ajax_callback."); }
 
-		return;
+		for(var i = 0 ; i < data.length; i++) {
+			addIncident(data[i]);
+		}
 	}
 
 	function addIncident(incident) {
+		console.log(incident);
 		var latlng		= new google.maps.LatLng(incident['location_latitude'], incident['location_longitude']);
 
 		addMarker(latlng);
