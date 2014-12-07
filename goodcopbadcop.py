@@ -25,6 +25,7 @@ data fields:
 __author__ = "Roddie Reventar"
 import json
 import urllib.parse as urlp
+import urllib.request as urlr
 import numpy as np
 
 
@@ -49,7 +50,7 @@ def api_get(incident=None, youtube=None, officer=None, location=None,
         argdict["status"] = status
     friendly = urlp.urlencode(argdict)
     fullurl = baseurl + "?" + friendly
-    with urllib.urlopen(fullurl) as f:
+    with urlr.urlopen(fullurl) as f:
         data = np.array([json.loads(line) for line in f])
     return data
 
