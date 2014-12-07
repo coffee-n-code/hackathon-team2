@@ -5,19 +5,9 @@
 
 	var geocoder = new google.maps.Geocoder();
 	var lat = 43.6631001;
-	var lng = -79.4105665;
+	var lng = -90.305300;
 	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
-
-	var incident_data	= {"node_title":"The Ferguson Incident",
-		"nid":"5",
-		"node_field_data_field_incident_reports_nid":"4",
-		"location_latitude":"38.744200",
-		"location_longitude":"-90.305300",
-		"Alleged Crime":[],
-		"Current Vote Score":"0",
-		"Evidence Piece":["<div class=\"field field-name-field-evidence-type field-type-list-text field-label-above\"><div class=\"field-label\">Media Type:&nbsp;</div><div class=\"field-items\"><div class=\"field-item even\">Video</div></div></div><div class=\"field field-name-field-media-url field-type-link-field field-label-above\"><div class=\"field-label\">Media URL:&nbsp;</div><div class=\"field-items\"><div class=\"field-item even\"><a href=\"https://www.youtube.com/watch?v=ut3xsdkIWhg\">Ferguson crazy vid yo</a></div></div></div><div class=\"field field-name-field-media-description field-type-text-long field-label-above\"><div class=\"field-label\">Media Description:&nbsp;</div><div class=\"field-items\"><div class=\"field-item even\">here&#039;s some crazy shit going on</div></div></div>"]
-	};
 
 
 
@@ -52,6 +42,12 @@
 			streetViewControl: false
 		}
 		map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+	}
+
+	function incident_ajax_callback(data) {
+		if(!data)	{ console.log("Error: no data given in incident_ajax_callback."); }
+
+		return;
 	}
 
 	function addIncident(incident) {
