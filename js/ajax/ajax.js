@@ -8,9 +8,9 @@ function mapping(){
 
 $(function(){
 	$.ajax({
-		url: 'http://goodcopbadcop.co/en/api/v1/incident_service.json',
+		url: 'http://goodcopbadcop.co/en/api/v1/incident_service',
 		type: 'GET',
-		dataType: "jsonp",
+		dataType: "json",
 		error: function(result,a,b){
 			console.log(":(");
 			console.log(result, a, b);
