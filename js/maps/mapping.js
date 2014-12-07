@@ -6,12 +6,15 @@
 	var geocoder = new google.maps.Geocoder();
 	var lat = 43.6631001;
 	var lng = -79.4105665;
+	var latlng = new google.maps.LatLng(lat,lng);
 	var map;
 
-	$(window).load(function() { initialize(); });
+	$(window).load(function() {
+		initialize();
+		addMarker(latlng);
+	});
 
 	function initialize() {
-		var latlng = new google.maps.LatLng(lat,lng);
 		var mapOptions = {
 			zoom: 14,
 			scrollwheel: false,
@@ -39,9 +42,6 @@
 			if(geolocated_lat != "" && geolocated_lon != "") {
 				starting_lat = geolocated_lat;
 				starting_lng = geolocated_lon;
-			} else if (typeof geoip_data != "undefined" &&  geoip_data['city'] && geoip_data['region']) {
-				center_on_city(geoip_data['city'], geoip_data['region']);
-				return true;
 			}
 		}
 		scrollMap(starting_lat,starting_lng);
@@ -57,209 +57,7 @@
 		return bounds;
 	}
 
-
-// *********************************************** Completely new and unsorted functions ************************/
-
-	function decode_poly_query(qstring, delimiter) {
-		if(!qstring		|| qstring		== "")		{ console.log("Error in decode_poly_query"); return; }
-		if(!delimiter	|| delimiter	== "")		{ delimiter = ","; }
-
-		var datalist = qstring.split(delimiter);
-		var polydata = {};
-		for (var i = 0; i < datalist.length; i++) {
-			var datum = datalist[i].split("=");
-			polydata[datum[0]] = datum[1];
-		}
-		return polydata;
-	}
-	function decode_polydata_name(name_string) {
-		if(!name_string) { return false; }
-		return decodeURIComponent(name_string).split('+').join(' ');
-	}
-
-
-// ************************************************ A new take on older ideas ***********************************/
-
-function polygon_clicked_wrapper(layer,e,placemark) {
-	return pbmaps.polygon_clicked(layer,e,placemark);
-}
-function item_clicked_wrapper(layer,e,placemark) {
-	return pbmaps.item_clicked(layer,e,placemark);
-}
-
-	var pbmaps = {
-		// --------------------- Event handlers and response functions ---------------------
-			// For polygons and map stuff
-				// Newer, updated polygon click handler
-				polygon_clicked: function(layer,e,placemark) {
-					var polydata	= geoDecodeNameString(placemark.name);
-					var latLng		= e.latLng;
-
-					// Use the other method accordingly.
-					this.center_polyclick(polydata,latLng);
-					if(typeof default_neighbourhoodChanged == "undefined" || default_neighbourhoodChanged == true) {
-						window.location.hash = encodeURIComponent(decode_polydata_name(polydata['name'])) + "/" + polydata['store_id'];
-					}
-					this.show_city_dropdown(); // Just in case
-				},
-
-				// Original! Polygon click handler
-				polygon_clicked_old: function(polydata,latLng) {
-					console.log("called polygon_clicked version in mapping_rd.js!");
-					if(!polydata	|| polydata	== "") { console.log("Error in polygon_clicked, no polydata!"); return; }
-
-					// Use the other method accordingly.
-					this.center_polyclick(polydata,latLng);
-					if(typeof default_neighbourhoodChanged == "undefined" || default_neighbourhoodChanged == true) {
-						window.location.hash = encodeURIComponent(decode_polydata_name(polydata['name'])) + "/" + polydata['store_id'];
-					}
-				},
-
-				// Arguments optional. If given any args, the first one sets the innerHTML of .mouse-tooltip
-				tooltip_html: function() {
-					if(arguments.length <= 0) {
-						return $(".mouse-tooltip").html();
-					} else {
-						return $(".mouse-tooltip").html(arguments[0]);
-					}
-				},
-
-				item_clicked: function(layer,e,placemark) {
-					var polydata	= geoDecodeNameString(placemark.name);
-					var latLng		= e.latLng;
-					var lat			= latLng.lat();
-					var lng			= latLng.lng();
-
-					// Center the map on the clicked item
-					scrollMap(lat,lng);
-					infobox.show();
-					$("#infobox .btn_small").hide();
-					if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-						infobox.open(map,marker);
-					}
-					$("#neighbourhoodName").html(decode_polydata_name(polydata['name']));
-					setTimeout(function() { $("#neighbourhoodName").html(decode_polydata_name(polydata['name'])); }, 50);
-
-					$(".infobox-btn-link").removeAttr("href");
-					$(".infobox-btn-link").attr("href",window.location.href);
-				},
-
-		// --------------------- Funcs affecting the map graphics -----------------------------------
-			// Given polydata and optional latLng, center on the appropriate neighbourhood
-			center_polyclick: function(polydata,latLng) {
-				if(!polydata	|| polydata	== "") { console.log("Error in center_polyclick, no polydata!"); return; }
-				if(!latLng		|| latLng	== "") { latLng = ""; }
-
-				// To eval: setting up the neighbourhood here.
-				this.setNeighbourhood_wrapper(polydata);
-
-				// Set the infobox appropriately
-				if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-					infobox.open(map,marker);
-				}
-
-				var name 	= decode_polydata_name(polydata['name']);
-				var id		= polydata['store_id'];
-				if(latLng != "") {
-					var opts_to_pass		= {};
-					opts_to_pass['lat']		= latLng.lat();
-					opts_to_pass['lng']		= latLng.lng();
-					center_on_id(id,opts_to_pass);
-				}
-			},
-
-			// Helper function to turn polydata into relevant info for calling setNeighbourhood global func.
-			setNeighbourhood_wrapper: function(polydata) {
-
-				// Set up vars we will need
-					var neighbourhood_object	= comms_by_id[polydata['store_id']];
-					var infobox_hood			= $('#neighbourhoodName');
-
-				// Check for errors
-					if(!infobox_hood && retrySet < 6) {
-						retrySet++;
-						setTimeout(function() {this.setNeighbourhood_wrapper(polydata)},100);
-						return;
-					} else { retrySet = 0; }
-					if(!neighbourhood_object) {
-						console.log("Data error: store_id from polygon not found in comms_by_id. Here's polydata: ");
-						console.log(polydata);
-						infobox_hood.html("Disabled neighbourhood! Sorry!");
-						unset_buttons(true);
-						return;
-					}
-
-				// Set globals
-					selectedNeighbourhood = neighbourhood_object['name'];
-
-				// Call the primary setNeighbourhood function
-				setNeighbourhood(selectedNeighbourhood, "", neighbourhood_object['parent_id'], polydata, polydata['store_id']);
-			},
-
-			// Map setup
-			setup_interactions: function() {
-				// Set up the infobox
-				$("#infobox").show();
-			},
-
-		// ------------------------- Funcs affecting the forms ------------------------
-			show_city_dropdown: function(name) {
-				if(!name || name == "") {
-					var hood_id = $(".neighbourhood").find("option:selected").attr("data-formid");
-					if(!hood_id || !comms_by_id[hood_id]) { return false; }
-					var parent_id = comms_by_id[hood_id]['parent_id'];
-					name = comms_by_id[parent_id]['name'];
-				}
-				$(".city").val(name);
-				setTimeout(function() { $(".city").val(name); }, 50); // just in case it lags
-				return true;
-			},
-
-			setForms: function(polydata) {
-				if(!polydata) { console.log("Error: no polydata in pbmaps.setForms!"); return false; }
-				var neighbourhood_object	= comms_by_id[polydata['store_id']];
-				var selectedNeighbourhood	= neighbourhood_object['name'];
-				var parentid				= neighbourhood_object['parent_id'];
-				var parentname				= comms_by_id[parentid]['name'];
-
-				$(".city").val(parentname);
-				cityChanged(parentname,parentid);
-				$(".neighbourhood").val(selectedNeighbourhood);
-				set_buttons();
-				this.show_city_dropdown();
-			}
-	};
-
-
 // --------------------------------------------------------------- Old functions, to be updated
-
-	function set_address_input() {
-		$(".address-input").bind("keypress",function(event) {
-			if(event.which == 13) {
-				event.preventDefault();
-				encodeAddress();
-				set_buttons();
-			}
-		});
-		$(".address-go-button").bind("click",function() {
-			CLogRecoder.addInfoFromSplash('address_entered_button_pressed', '', $(".address-input").val());
-			encodeAddress("","","", true); // pagejump flag is set to true -- use simply encodeAddress(); to restore default.
-			set_buttons();
-		});
-	}
-
-	function setBaseColour(geoXmlDoc) {
-		for(var n = 0; n < gi.layers.length; n++) {
-			var geoXmlDoc = gi.layers[n].geoXmlDoc;
-			if(!geoXmlDoc || typeof geoXmlDoc.gpolygons === "undefined") { break; }
-
-			for (var i=0; i<geoXmlDoc.gpolygons.length; i++) {
-				geoXmlDoc.placemarks[i].polygon.normalStyle = {fillColor: "#1dafec", strokeColor: "#1dafec", fillOpacity: 0.2, strokeWidth: 2, strokeOpacity: 1};
-				geoXmlDoc.placemarks[i].polygon.setOptions(geoXmlDoc.placemarks[i].polygon.normalStyle);
-			}
-		}
-	}
-
 
 	function scrollMapHTML(position) {
 		if (!geolocated) {
@@ -308,6 +106,31 @@ function item_clicked_wrapper(layer,e,placemark) {
 											position: latlng
 											});
 		}
+	}
+
+	function addMarker(latlng, url, image_src) {
+		if(!latlng	|| latlng	== "") { return false; }
+		if(!url		|| url		== "") { url = "incident.php"; }
+		if(!image	|| image	== "") { image_src	= 'images/gcbc_marker.png'; }
+
+		var image = {
+			url: image_src,
+			// This marker is 20 pixels wide by 32 pixels tall.
+			size: new google.maps.Size(32, 34),
+			// The origin for this image is 0,0.
+			origin: new google.maps.Point(0,0),
+			// The anchor for this image is the base of the flagpole at 0,32.
+			anchor: new google.maps.Point(16, 39)
+		};
+
+		var marker = new google.maps.Marker({
+			map: map,
+			icon: image,
+			position: latlng
+		});
+		google.maps.event.addListener(marker, 'click', function() {
+			window.location = url;
+		});
 	}
 
 
@@ -690,7 +513,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 			return;
 		}
 
-		gi.geocoder.geocode( { 'address': address}, function(results, status) {
+		geocoder.geocode( { 'address': address}, function(results, status) {
 			if (status == google.maps.GeocoderStatus.OK) {
 				var loc = results[0].geometry.location;
 				var lat = loc.lat();
@@ -744,7 +567,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 	// Takes coordinates --> returns address
 	function encodeLatLng(lat,lng) { // Based on Google Maps API
 		var latlng = new google.maps.LatLng(lat, lng);
-		gi.geocoder.geocode({'latLng': latlng}, function(results, status) {
+		geocoder.geocode({'latLng': latlng}, function(results, status) {
 			if (status == google.maps.GeocoderStatus.OK) {
 				if (results[1]) {
 					$("#approx_address").html(results[1].formatted_address);
@@ -875,558 +698,10 @@ function item_clicked_wrapper(layer,e,placemark) {
 		}
 	}
 
-	function setup_province_selectors() {
-		$(".province-selector").show();
-
-		$(".province-button").on("click tap",function() {
-			province_changed(this,true);
-		});
-
-		// Set the cities that we should center in on, per province.
-		comms_by_id[59].cityForCenter = 58; // Toronto
-		comms_by_id[251].cityForCenter = 443; // Vancouver
-
-		if(geoip_data['region'] == "BC") {
-			province_changed($(".bc-button")[0]);
-		} else {
-			province_changed($(".on-button")[0]);
-		}
-	}
-
-	// Method of adding cities to $(".city") via JS instead of PHP
-	function rewrite_cities (province_id, selector) {
-		if(!province_id	|| province_id	== "") { province_id	= 59;		}
-		if(!selector	|| selector 	== "") { selector		= ".city";	}
-
-		var output = '<option value="" disabled selected>Select City</option>';
-		for (var i in comms) {
-			if(comms[i].type == 2 && comms[i].parent_id == province_id) { // It's a city! -- Does it have children?
-				if(has_children(comms[i])) { // Only list it if it has a child!
-					output += "<option class='" + comms[i].name + " cityid" + comms[i].id + "' data-formid='" + comms[i].id;
-					output += "' value='" + comms[i].name + "'>" + comms[i].name + "</option>";
-				}
-			}
-		}
-		$(selector).html(output);
-	}
-
-	// Similar to rewrite_cities, but for the map overlay in the neighbourhood pages, not the splash
-	// A bit of a legacy, from Sam's work on the new_rd from July 2014
-	function setup_map_overlay_neighbourhoods () {
-		var output = '<option value="" disabled selected>Select City</option>';
-		for (var i in comms) {
-			if(comms[i].type == 2) { // It's a city! -- Does it have children?
-				if(has_children(comms[i])) { // Only list it if it has a child!
-					output += "<option id=" + comms[i].name + " class=cityid" + comms[i].id + " data-formid=" + comms[i].id;
-					output += " value=" + comms[i].name + ">" + comms[i].name + "</option>";
-				}
-			}
-		}
-		$(".city").html(output);
-		$(".city").change(function(e) { cityChange_user(this);      }); // Pass in the DOM object of the city being passed in.
-	}
-
-	function get_polygon_center(id) {
-		var thepolygon		= get_polygon_by_id(id);
-		return my_getBounds(thepolygon).getCenter();
-	}
-
-	function get_polygon_by_id(id) {
-		if(!id || id == "") { return false; }
-
-		for(var n = 0; n < gi.layers.length; n++) {
-			var geoXmlDoc = gi.layers[n].geoXmlDoc;
-			if(!geoXmlDoc || typeof geoXmlDoc.gpolygons === "undefined") { break; }
-
-			for (var i=0; i<geoXmlDoc.gpolygons.length; i++) {
-				var neighbourhood_polydata	= decode_poly_query(geoXmlDoc.gpolygons[i].name);
-				var neighbourhood_id		= decode_polydata_name(neighbourhood_polydata['store_id']);
-				if(neighbourhood_id == id) {
-					return geoXmlDoc.gpolygons[i];
-				}
-			}
-		}
-	}
-
-	// Takes a location item for GPS coordinates; returns the ID of a neighbourhood if within our network (by using polygons).
-	function getNeighbourhood_from_loc(loc) {
-		var indexToUse = -1;
-		for(var n = 0; n < gi.layers.length; n++) {
-			var geoXmlDoc = gi.layers[n].geoXmlDoc;
-			if(!geoXmlDoc || typeof geoXmlDoc.gpolygons === "undefined") { break; }
-
-			for (var i=0; i<geoXmlDoc.gpolygons.length; i++) {
-				if(geoXmlDoc.placemarks[i].polygon.getVisible()) {
-					if(!google.maps.geometry || !google.maps.geometry.poly) { continue; }
-					if (google.maps.geometry.poly.containsLocation(loc,geoXmlDoc.gpolygons[i])) {
-						var neighbourhood_polydata	= decode_poly_query(geoXmlDoc.placemarks[i].name);
-						return neighbourhood_polydata['store_id'];
-					}
-				}
-			}
-		}
-		if(indexToUse == -1) {
-			return false;
-		}
-	}
-
-	// Center on the IP-based geolocated city
-	function geocity() {
-		return center_on_city(geoip_data['city'],geoip_data['region']);
-	}
-
-	function handle_map_tooltip() {
-		// Track mouse position while hovering over map, so that tooltip can work in geo_pb.js
-		var tooltip = $(".mouse-tooltip");
-		$("#map-canvas").mousemove(function(e) {
-			if(infobox_mouseover || !poly_mouseover) {
-				tooltip.hide();
-				return;
-			}
-			mouse_x = e.clientX;
-			mouse_y = e.clientY;
-			tooltip.css("top",mouse_y - 40).css("left",mouse_x-20).show(); // Position this above the mouse, slightly.
-			if(tooltip.height() > 20) {
-				tooltip.css("top",mouse_y-20-tooltip.height());
-			}
-		});
-		// Hovering over the infobox? Adjust a global var accordingly.
-		$("#infobox").mouseover(function(e) {
-			infobox_mouseover = true;
-		});
-		$("#infobox").mouseout(function(e) {
-			infobox_mouseover = false;
-		});
-
-		$("#map-canvas").mouseout(function(e) {
-			tooltip.hide();
-		});
-		$("#map_overlay, #infobox, #header, .midsection").mouseover(function(e) {
-			tooltip.hide();
-		});
-	}
-
-	// Highlight the polygon that currently occupies the map center.
-	function highlight_centered_polygon() {
-		var loc = map.center;
-		try {
-			if(!gi.layers || !gi.layers[0].geoXmlDoc || !gi.layers[0].geoXmlDoc.gpolygons) { return false; }
-		} catch(err) { return false; }
-		for(var n = 0; n < gi.layers.length; n++) {
-			var geoXmlDoc = gi.layers[n].geoXmlDoc;
-			if(!geoXmlDoc || typeof geoXmlDoc.gpolygons === "undefined") { break; }
-
-			for (var i = 0; i < geoXmlDoc.gpolygons.length; i++) {
-				try {
-					if (geoXmlDoc.placemarks[i].polygon.getVisible()) {
-						if (google.maps.geometry.poly.containsLocation(loc,geoXmlDoc.gpolygons[i])) {
-
-							setBaseColour(geoXmlDoc);
-							geoXmlDoc.placemarks[i].polygon.normalStyle = {fillColor: "#AAAAAA", strokeColor: "#FFAAAA", fillOpacity: 0.3, strokeWidth: 5, strokeOpacity: 1};
-							geoXmlDoc.placemarks[i].polygon.setOptions(geoXmlDoc.placemarks[i].polygon.normalStyle);
-							break;
-						}
-					}
-				} catch (err) {
-					// Do nothing.
-				}
-			}
-		}
-	}
-
 	function no_location_recovery() {
 		geocity();
 		var message = "Sorry, we were unable to determine your location.<br/><br/>";
 		message += "Please check your browser settings, and be sure to enable location services.";
 		display_modal("My Location",message);
 		return false;
-	}
-
-	// Recenter the map based on the user's current geolocation, or display an error message.
-	function my_location() {
-		CLogRecoder.addInfoFromSplash('my_location_button_pressed');
-		if(geolocated_hood_name != "" && geolocated_hood_name != false) { geolocated = true; }
-
-		if (!geolocated) {
-			return no_location_recovery();
-		}
-
-		// If we have these things set, always scroll!
-		scrollMap(geolocated_lat,geolocated_lon);
-
-		if(!geolocated_hood_name || !geolocated_hood_id) {
-			if(geolocated_loc != "") { // Means it has been found/set.
-				var found_hood	= getNeighbourhood_from_loc(geolocated_loc);
-				if(found_hood == false) {
-					infobox.close();
-					return false;
-				} else {
-					geolocated_hood_id		= found_hood;
-					geolocated_hood_name	= comms_by_id[found_hood].name;
-				}
-			}
-		} // implicit else
-		$("#neighbourhoodName").html(geolocated_hood_name);
-		setNeighbourhood(geolocated_hood_name);
-		pbmaps.show_city_dropdown();
-		highlight_centered_polygon();
-		window.location.hash = encodeURIComponent(geolocated_hood_name) + "/" + geolocated_hood_id;
-
-		return;
-	}
-
-	// Cause user to jump to page for neighbourhood based on their current geolocation.
-	function my_location_jump(e) {
-		CLogRecoder.addInfoFromSplash('my_location_button_pressed');
-
-		if (!geolocated) {
-			return no_location_recovery();
-		}
-
-		var specified_neighbourhood		= geolocated_hood_name;
-		var specified_hood_id			= geolocated_hood_id;
-
-		if(!geolocated_hood_id || !geolocated_hood_name) {
-			var found_hood = getNeighbourhood_from_loc(geolocated_loc);
-			if(found_hood == "" || found_hood == false) {
-				return no_location_recovery();
-			} else {
-				specified_hood_id			= found_hood;
-				specified_neighbourhood		= comms_by_id[found_hood].name;
-			}
-		}
-
-		var message = "It looks like you are connecting from " + specified_neighbourhood + ". We will send you over to that neighbourhood now. Wait just one second while we load the page...";
-		display_modal("Loading " + specified_neighbourhood + "...",message);
-		var withinbox = elem_ancestor_with_id($(e.target)).attr("id"); // Check the elem 4 units up in the DOM from the clicked button.
-		var endingurl = go_list[withinbox];
-		squery = "";
-		if (withinbox == "businesses") {
-			squery = $("#businesses .biz-only input").val();
-			if (squery != "") {
-				withinbox = "businesses2";
-				endingurl = go_list.businesses2 + squery;
-			}
-		}
-		var path = pbsitehost;
-		path += comms_by_id[specified_hood_id].path;
-		// And now we redirect!
-		window.location = path + endingurl;
-	}
-
-	function neighbourhoodChanged_by_id(id) {
-		if(!id || id == "" || typeof comms_by_id[id] == "undefined") { console.log("Error: bad id ("+id+") in neighbourhoodChanged_by_id"); return false; }
-		var selected_id = id;
-
-		// Set the global - the user touched a dropdown!
-		if(user_touched_dropdowns == 0) { user_touched_dropdowns = 1; }
-
-		// First, let's grab some data about the neighbourhood just selected.
-		var selected_city_id	= comms_by_id[id]['parent_id'];
-		var selected_n			= comms_by_id[id]['name'];
-
-		current_neighbourhood = selected_n; // set the global
-		selectedNeighbourhood = selected_n;
-
-		// Set the URL hashtag for easy reload.
-		if(typeof default_neighbourhoodChanged == "undefined") { default_neighbourhoodChanged = true; }
-		if(typeof default_neighbourhoodChanged == "undefined" || default_neighbourhoodChanged == true) {
-			window.location.hash = encodeURIComponent(selected_n) + "/" + selected_id;
-		}
-
-		if(selected_n) { $("#neighbourhoodName").html(selected_n);}
-		if($("#neighbourhoodName").html() != "" && $("#neighbourhoodName").html() != "false") {
-			infobox.open(map,marker);
-		}
-		center_on_id(selected_id);
-
-		// Change infobox.
-		setNeighbourhood(selected_n, false, selected_city_id,"",selected_id);
-		set_buttons();
-		pbmaps.show_city_dropdown();
-		setTimeout(function() { check_links(); }, 150);
-		setTimeout(function() { $(".neighbourhood").val(selected_n); }, 100); // To address mobile bug: option doesn't always change properly on phones.
-	}
-
-	function neighbourhoodChanged(details, id) {
-		if($(".neighbourhood").html() == "") { return false; } // Don't do anything if it's empty. Don't worry about it!
-		if(arguments.length == 0) { console.log("Error: no args in neighbourhoodChanged!"); return false; }
-		if(!id || id == "") {
-			id = $(details).find("option:selected").attr("data-formid"); // Grab id of selected neighbourhood, to match above json.
-		}
-		if(id) { return neighbourhoodChanged_by_id(id); }
-		else { console.log("Error in neighbourhoodChanged."); return false; }
-
-	}
-
-	function _process_hash_neighbourhood(hash,hood_id) {
-		var parent_id = "";
-		if(!hood_id) { hood_id = find_neighbourhood_by_name(hash).id; }
-		else { parent_id = comms_by_id[hood_id]['parent_id']; }
-
-		hash_for_neighbourhood = hash;
-		setNeighbourhood(hash,"","","",hood_id);
-		center_on_id(hood_id);
-		set_buttons();
-	}
-
-	function _process_hash_city(hash) {
-		hash_for_neighbourhood = hash;
-		cityChanged(hash);
-		center_on_city(hash);
-		unset_buttons(true);
-	}
-
-	// Process the page hash
-	// Go to appropriate section - or jump to neighbourhood.
-	function process_hash() {
-		var hash			= decodeURIComponent(window.location.hash);
-		if(hash == "" || hash == "#_=_") { return center_starting_coords(); }
-
-		// If there is a hash, let's process it.
-		var hstring			= hash.substring(1);
-		hash_when_loaded	= hash;
-		var hood_data		= hstring.capitalize().split('/');
-		var hood_name		= decodeURIComponent(hood_data[0]);
-		var hood_id			= false;
-
-		if(hood_data.length > 1 && hood_data[1].length > 1)	{
-			hood_id 		= hood_data[1];
-		}
-
-		if (find_city_by_name(hood_name)) {
-			_process_hash_city(hood_name);
-			setTimeout(function() { _process_hash_city(hood_name); }, 150);
-			hash_to_hood = true;
-			return;
-		} else if (find_neighbourhood_by_name(hood_name)) {
-			_process_hash_neighbourhood(hood_name,hood_id);
-			hash_to_hood = true;
-			return;
-		}
-
-		common_process_hash(hash.split('/')[0]);
-	}
-
-	function common_process_hash(hash) {
-		if(!hash || hash == "" || hash == undefined) { hash = decodeURIComponent(window.location.hash); }
-
-		// Since this part has been delegated here:
-		center_starting_coords();
-
-		// Now let's look out for any of those join/login prompts.
-		if (hash == "#join" || hash == "#signup") {
-			fnShowJoinForm();
-		} else if (hash == "#login" || hash == "#signin") {
-			fnShowLoginForm();
-		} else if (hash == "#welcome") {
-			fnShowWelcomeForm();
-		} else if ($(hash).length > 0){
-			fnScrollTo($(hash),-52,400);
-		}
-	}
-
-
-	function set_biz_input() {
-		$(".biz-input").bind("keypress",function(event) {
-			if(event.which == 13) {
-				event.preventDefault();
-				var selected_n = $(document).find(".neighbourhood option:selected").val();
-				if (selected_n == "Neighbourhood") {
-					selected_n = $(document).find("option:selected").val();
-				}
-				var thisbox = $(this);
-				var path = pbsitehost;
-				for(var i=0;i<comms.length; i++) {
-					if(comms[i].name == selected_n) {
-						path += comms[i].path;
-						break;
-					}
-				}
-				squery = $("#businesses .biz-only input").val();
-				path += go_list.businesses2 + squery;
-				// window.location = path;
-			}
-		});
-	}
-
-	// Helper functions for set_buttons - complex enough that this object was necessary.
-	var pb_set_buttons = {
-		// Set the find buttons appropriately.
-		find_buttons: function(hood_obj,hood_name) {
-			if(!hood_obj) { return false; }
-
-			$(".find-button-link").removeAttr("href");
-
-			// Set links on the "find-buttons"
-			for(var key in go_list) {
-				var fallback_link = pbsitehost;
-				fallback_link += hood_obj.path;
-				if(key == "businesses2") { continue; }
-
-				if (key == "businesses") {
-					var squery = $("#businesses .biz-only input").val();
-					var keyval = squery == "" ? "businesses" : "businesses2"
-					fallback_link += go_list[keyval] + squery;
-				} else {
-					fallback_link += go_list[key];
-				}
-
-				$("#" + key + " .find-button-link").attr("href",fallback_link);
-
-				// And now set the titles
-				if(key == "map_overlay") {
-					$("#" + key + " .find-button-link").attr("title","Go to " + hood_name);
-				} else {
-					$("#" + key + " .find-button-link").attr("title","Find " + key + " in " + hood_name);
-				}
-			}
-			return true;
-		},
-
-		infobox: function(hood_obj,hood_name) {
-			if(!hood_name) { console.log("Error: pb_set_buttons.infobox w/o hood_name"); return false; }
-
-			$("#neighbourhoodName").html(hood_name);
-
-			// Update the "go now" link
-			$(".infobox-btn-link").removeAttr("href");
-			$(".infobox-btn-link").attr("href",hood_obj.path);
-
-			setTimeout(function() {
-				$(".infobox-btn-link").attr("href",hood_obj.path);
-				$("#neighbourhoodName").html(hood_name);
-			}, 50); // Because this always lags!
-
-			// Update title
-			$("#infobox .btn_small").attr("title","Go to " + hood_name);
-			return true;
-		},
-
-		// For the marker (image) right above the infobox.
-		marker: function(hood_obj,hood_name) {
-			if(!hood_obj) {return false;}
-			if(marker) {
-				marker.unbind('click'); // First unbind all previous listeners.
-				google.maps.event.addListener(marker, 'click', function() {
-					window.location = "/" + hood_obj.path;
-					return; // Not entirely necessary, but oh well.
-				});
-			}
-			return true;
-		},
-
-		// Set the my_location button accordingly.
-		my_location: function(hood_obj,hood_name) {
-			// Set my_location_neighbourhood to set those buttons accordingly.
-			var my_home_neighbourhood = geolocated_hood_name;
-			var my_work_neighbourhood = geolocated_hood_name;
-			if(geolocated_hood_name == "") {
-				my_location_neighbourhood = hood_name;
-			}
-		}
-	}
-
-	// This function needs a good cleanup!
-	function set_buttons(hood_obj) {
-		if(!hood_obj && $(".neighbourhood").val() == null)	{ return false; } // Error
-
-		if(!hood_obj)	{ hood_obj = comms_by_id[$(".neighbourhood").find("option:selected").attr("data-formid")]; }
-		var hood_name = hood_obj['name'];
-
-		// Slide up/down buttons in map_overlay and below
-		$(".find-button").stop().clearQueue().slideDown('slow');
-		$(".select_neighbourhood_prompt").stop().clearQueue().slideUp();
-
-		pb_set_buttons.infobox		(hood_obj, hood_name);
-		pb_set_buttons.marker		(hood_obj, hood_name);
-		pb_set_buttons.find_buttons	(hood_obj, hood_name);
-		setTimeout(function() {
-			pbmaps.show_city_dropdown();
-		},500);
-	}
-	function set_menus_by_id(id) {
-		if(!id)									{ console.log("No id given in set_menus_by_id");	return false; }
-		var hood_obj		= comms_by_id[id];
-		if(typeof hood_obj == "undefined")		{ console.log("Bad id given in set_menus_by_id");	return false; }
-
-		if(hood_obj['type'] == 2) { // It's a city! Update accordingly.
-			$(".city").val(hood_obj['name']);
-			cityChanged(hood_obj['name'],hood_obj['id']);
-			return;
-		} // implicit else
-
-		var parent_obj = comms_by_id[hood_obj['parent_id']];
-
-		$(".city").val(parent_obj['name']);
-		cityChanged(parent_obj['name'],parent_obj['id']);
-		$(".neighbourhood").val(hood_obj['name']);
-		set_buttons(hood_obj);
-	}
-
-	function setMenus(hood_name, iscity, parentid, polydata,id) {
-		if(!id			|| id			== "")	{ id = false; }
-		if(id)									{ return set_menus_by_id(id); }
-		if(!hood_name 	|| hood_name 	== "")	{ return false;  } // That's an error!
-		var neighbourhood_object = false;
-
-		if(!iscity   || iscity == "")   { iscity = false;	}
-		if(!parentid || parentid == "") { parentid = 0;		}
-		if(!polydata || polydata == "") { polydata = false;
-		} else { // If given polydata, use it!
-			// pbmaps.setForms(polydata);
-		}
-
-		if(iscity) {
-			$(".city").val(hood_name);
-			console.log("iscity in setmenus");
-			cityChanged(hood_name);
-			return;
-		} // implicit else
-
-		var parentname = $(".cityid" + parentid).html();
-		var neighbourhood_object = find_neighbourhood_by_name(hood_name,parentname);
-		parentid = neighbourhood_object.parent_id;
-
-		$(".city").val(parentname);
-		cityChanged(parentname,parentid);
-		$(".neighbourhood").val(hood_name);
-		set_buttons();
-	}
-
-	// Given a neighbourhood or city name, return "city" or "neighbourhood" type.
-	function typeof_neighbourhood(name) {
-		for(var i=0;i<comms.length; i++) {
-			if(comms[i].name == name) {
-				switch (comms[i].type) {
-					case(4):
-						return "country";
-					case(3):
-						return "province";
-					case(2):
-						return "city";
-					case(1):
-						return "neighbourhood";
-					default:
-						return "Not 1-4";
-				}
-			}
-		}
-		return "Not found.";
-	}
-
-	function unset_buttons (definitely_unset) {
-		if(!definitely_unset) { definitely_unset = false; }
-		current_neighbourhood = $(".neighbourhood").val();
-		if((current_neighbourhood != "" || current_neighbourhood != null) && !definitely_unset) { return 1; }
-		$(".location-button").unbind();
-		$(".biz-input").unbind("keypress");
-
-		$("#map_overlay .find-button").stop().clearQueue().slideUp('slow');
-		$(".find-button-link").removeAttr("href");
-		$(".infobox-btn-link").removeAttr("href");
-		$(".find-button-link, .infobox-btn-link").attr("title","You must select a neighbourhood first!");
-
-		$(".select_neighbourhood_prompt").slideDown();
-		$(".find-button").slideUp();
 	}
