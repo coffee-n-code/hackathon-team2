@@ -1,8 +1,9 @@
-function frontend(){
-
+function displayData(data){
+	$('#mostRecent').find('h4.incident').text(data.node_title);
+	$('#videoTitle').text(data.node_title);
 };
 
-function mapping(){
+function incident_ajax_callback(data){
 
 };
 
@@ -18,8 +19,9 @@ $(function(){
 		success: function(result,a,b){
 			console.log("Huzzah!");
 			console.log(result);
-			frontend();
-			mapping();
+			var data = result;
+			displayData(data);
+			incident_ajax_callback(data);
 		}
 	});
 });
