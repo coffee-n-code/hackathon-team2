@@ -18,9 +18,23 @@ div.highlight:nth-of-type(2) {
 }
 
 #footer {
-	color: #000;
+	background: #000;
+	color: #fff;
 	padding: 50px 70px;
 	margin-top: 50px;
+}
+
+#copyright {
+	margin-bottom: 15px;
+}
+
+#footer a {
+	text-decoration: none;
+	margin-right: 20px;
+}
+
+#footer a:last-of-type {
+	margin-right: 0;
 }
 
 #footer a,
@@ -33,6 +47,7 @@ div.highlight:nth-of-type(2) {
 #footer a:hover,
 #footer a:focus {
 	color: #31708F;
+	background: #fff;
 }
 
 @media all and (max-width: 1199px) {

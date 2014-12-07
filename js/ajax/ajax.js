@@ -1,3 +1,11 @@
+function frontend(){
+
+};
+
+function mapping(){
+
+};
+
 $(function(){
 	$.ajax({
 		url: 'http://goodcopbadcop.co/en/api/v1/incident_service.json',
@@ -10,6 +18,8 @@ $(function(){
 		success: function(result,a,b){
 			console.log("Huzzah!");
 			console.log(result);
+			frontend();
+			mapping();
 		}
 	});
 });
