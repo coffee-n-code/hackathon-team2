@@ -1,8 +1,3 @@
-<?php 
-	print_r($_REQUEST);
-
-?>
-
 <!DOCTYPE html>
 <html>
 	<head prefix="">

@@ -15,22 +15,3 @@ function displayData(data){
 	$('#lowestRated').find('.video-thumbnail').html('<iframe width="250" height="150" src="//www.youtube.com/embed/'+constructSrc(data, 1)+'" frameborder="0" allowfullscreen></iframe>');
 };
 
-
-$(function(){
-	$.ajax({
-		url: 'http://goodcopbadcop.co/en/api/v1/incident_service',
-		type: 'GET',
-		dataType: "json",
-		error: function(result,a,b){
-			console.log(":(");
-			console.log(result, a, b);
-		},
-		success: function(result,a,b){
-			console.log("Huzzah!");
-			console.log(result);
-			var data = result;
-			displayData(data);
-			incident_ajax_callback(data);
-		}
-	});
-});
