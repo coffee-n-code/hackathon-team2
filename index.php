@@ -14,6 +14,7 @@
 
 				</div>
 			</div>
+			<?php include("includes/_highlights.php"); ?>
 		</div>
 	</body>	
 </html>
