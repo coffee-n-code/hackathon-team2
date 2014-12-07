@@ -268,42 +268,6 @@ function item_clicked_wrapper(layer,e,placemark) {
 			geolocated_loc = loc;
 			geolocated_lat = position.coords.latitude;
 			geolocated_lon = position.coords.longitude;
-			localStorage.setItem("geolocated_loc",geolocated_loc);
-			localStorage.setItem("geolocated_lat",geolocated_lat);
-			localStorage.setItem("geolocated_lon",geolocated_lon);
-
-			// Set the globals appropriately.
-			var found_id		= getNeighbourhood_from_loc(loc);
-			geolocated_hood_id	= found_id;
-			if(found_id == false) {
-				return;
-			} else {
-				geolocated_hood_name	= comms_by_id[geolocated_hood_id].name;
-				set_geolocated_city(geolocated_lat,geolocated_lon,geolocated_hood_name);
-
-				localStorage.setItem("geolocated_hood_name",geolocated_hood_name);
-				localStorage.setItem("geolocated_hood_id",geolocated_hood_id);
-				localStorage.setItem("geolocated_city_id",geolocated_city_id);
-				localStorage.setItem("geolocated_city",geolocated_city);
-			}
-
-			if(hash_for_neighbourhood != false && user_touched_dropdowns != 2) {
-				user_touched_dropdowns = 2;
-				return; // Don't scroll because they have a hashtag in place.
-			}
-
-			// Now decide whether or not to re-center the map at the moment.
-			if(user_touched_dropdowns == 1) {
-				var message = "It looks like you are connecting from a neighbourhood called " + geolocated_hood_name + ". This has been set as your location.<br/><br/>";
-				message += "Would you like to go to " + geolocated_hood_name + " now?";
-				var x = function() { checkNeighbourhood(loc, position.coords.latitude, position.coords.longitude); }; // Wrapper required to pass as arg in next equ, without executing.
-				display_option_modal("Location Found",message,x);
-			} else {
-				if(typeof default_scrollMapHTML_recenters == undefined) { default_scrollMapHTML_recenters = true; }
-				if(window.location.hash == "" && default_scrollMapHTML_recenters) {
-					checkNeighbourhood(loc, position.coords.latitude, position.coords.longitude); // This will re-center the map.
-				}
-			}
 		}
 		user_touched_dropdowns = 2;
 	}
@@ -329,9 +293,9 @@ function item_clicked_wrapper(layer,e,placemark) {
 			marker.setPosition(latlng);
 		else {
 			var image = {
-				url: '/home/image/pblogo32x39.png',
+				url: 'images/gcbc_marker.png',
 				// This marker is 20 pixels wide by 32 pixels tall.
-				size: new google.maps.Size(32, 39),
+				size: new google.maps.Size(32, 34),
 				// The origin for this image is 0,0.
 				origin: new google.maps.Point(0,0),
 				// The anchor for this image is the base of the flagpole at 0,32.
@@ -350,13 +314,11 @@ function item_clicked_wrapper(layer,e,placemark) {
 	function handleError(error) {
 		// Update a div element with error.message.
 		showInContentWindowWarning("Could not determine location from web browser. Please click on map or enter an address above.");
-		navigator.geolocation.clearWatch(watchId);
 		console.log("Location service failed. Check browser settings.");
 	}
 
 	function buttonClickHandler() {
 		// Cancel the updates when the user clicks a button.
-		navigator.geolocation.clearWatch(watchId);
 	}
 
 /* ************************************************** Geolocating the User *********************************/
@@ -402,6 +364,7 @@ function item_clicked_wrapper(layer,e,placemark) {
 	var geolocated_loc				= localStorage.getItem("geolocated_loc")		? localStorage.getItem("geolocated_loc")		: "";
 	var geolocated_position			= "";
 	var geolocation_attempts		= 0;
+	var geolocated					= false;
 
 	// Globals for user interactions and such
 	var user_touched_dropdowns		= 0; // This var can have 3 states: 0 = not geolocated & haven't touched; 1 = not geolocated & has touched; 2 = geolocated, doesn't matter if touched.
